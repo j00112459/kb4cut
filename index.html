@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KB 네컷 | KB 부트캠프 7기</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- ===== SCREEN 1: MAIN ===== -->
+    <section id="screen-main" class="screen active">
+      <div id="floating-stars"></div>
+      <div class="main-center">
+        <div class="main-card">
+          <!-- KB Character top-right of card -->
+          <div class="main-char-wrap">
+            <svg
+              viewBox="0 0 100 110"
+              xmlns="http://www.w3.org/2000/svg"
+              class="kb-char kb-char--main"
+            >
+              <ellipse
+                cx="50"
+                cy="106"
+                rx="28"
+                ry="6"
+                fill="rgba(0,0,0,0.08)"
+              />
+              <circle cx="50" cy="62" r="42" fill="#FFC200" />
+              <path
+                d="M50,12 L54,24 L67,24 L57,32 L61,45 L50,37 L39,45 L43,32 L33,24 L46,24 Z"
+                fill="#FFD700"
+                stroke="#E6A800"
+                stroke-width="1"
+              />
+              <ellipse
+                cx="37"
+                cy="48"
+                rx="12"
+                ry="8"
+                fill="rgba(255,255,255,0.3)"
+                transform="rotate(-15,37,48)"
+              />
+              <circle cx="41" cy="60" r="5.5" fill="white" />
+              <circle cx="59" cy="60" r="5.5" fill="white" />
+              <circle cx="42.5" cy="61" r="3.5" fill="#1A1A2E" />
+              <circle cx="60.5" cy="61" r="3.5" fill="#1A1A2E" />
+              <circle cx="44" cy="60" r="1.2" fill="white" />
+              <circle cx="62" cy="60" r="1.2" fill="white" />
+              <path
+                d="M 40 73 Q 50 82 60 73"
+                fill="none"
+                stroke="#1A1A2E"
+                stroke-width="2.5"
+                stroke-linecap="round"
+              />
+              <circle cx="31" cy="67" r="7" fill="#FF9090" opacity="0.35" />
+              <circle cx="69" cy="67" r="7" fill="#FF9090" opacity="0.35" />
+              <ellipse
+                cx="12"
+                cy="68"
+                rx="13"
+                ry="8"
+                fill="#FFC200"
+                stroke="#E6A800"
+                stroke-width="0.5"
+                transform="rotate(20,12,68)"
+              />
+              <ellipse
+                cx="88"
+                cy="55"
+                rx="13"
+                ry="8"
+                fill="#FFC200"
+                stroke="#E6A800"
+                stroke-width="0.5"
+                transform="rotate(-30,88,55)"
+              />
+            </svg>
+          </div>
+
+          <!-- Logo area -->
+          <div class="main-logo-area">
+            <div class="kb-logo-badge">
+              <span class="kb-logo-text">KB</span>
+            </div>
+            <h1 class="main-title">네컷</h1>
+          </div>
+
+          <p class="main-subtitle">
+            kb IT's your life 7기의 순간을<br />기록해보세요
+          </p>
+
+          <div class="main-sparkle-row">
+            <span class="sparkle">✦</span>
+            <span class="sparkle-dot"></span>
+            <span class="sparkle">★</span>
+            <span class="sparkle-dot"></span>
+            <span class="sparkle">✦</span>
+          </div>
+
+          <button class="btn btn-primary" onclick="goToFrameSelect()">
+            <i class="fa-solid fa-camera"></i> 사진 찍으러 가기
+          </button>
+          <button class="btn btn-secondary" onclick="showHowto()">
+            ? 사용방법
+          </button>
+        </div>
+      </div>
+
+      <footer class="main-footer">
+        <span> 2026. 난쌤 All rights reserved 보고 따라했습니다</span>
+        <span>문의: 26회차_이대주 DM</span>
+      </footer>
+    </section>
+
+    <!-- ===== SCREEN 2: FRAME SELECT ===== -->
+    <section id="screen-frame" class="screen">
+      <div class="frame-select-inner">
+        <button class="btn-back" onclick="goToMain()">← 뒤로가기</button>
+
+        <div class="frame-header">
+          <h2 class="frame-title">원하는 프레임을 선택하세요</h2>
+          <p class="frame-subtitle">
+            두 가지 스타일 중 마음에 드는 레이아웃을 골라보세요
+          </p>
+        </div>
+
+        <div class="frame-cards-row">
+          <!-- Frame A -->
+          <div class="frame-card" onclick="selectFrame('A')">
+            <div class="frame-card-icon">
+              <i class="fa-solid fa-display"></i>
+            </div>
+            <h3 class="frame-card-name">세로네컷 A형</h3>
+            <p class="frame-card-spec">데스크탑 · 2×6인치 출력</p>
+            <p class="frame-card-desc">
+              세로로 4컷이 쌓이는<br />클래식 스타일
+            </p>
+            <div class="frame-preview frame-preview--a">
+              <div class="fp-slot"></div>
+              <div class="fp-slot"></div>
+              <div class="fp-slot"></div>
+              <div class="fp-slot"></div>
+            </div>
+          </div>
+
+          <!-- Frame B -->
+          <div class="frame-card" onclick="selectFrame('B')">
+            <div class="frame-card-icon">
+              <i class="fa-solid fa-mobile-screen"></i>
+            </div>
+            <h3 class="frame-card-name">정방네컷 B형</h3>
+            <p class="frame-card-spec">모바일 · 세로 출력</p>
+            <p class="frame-card-desc">
+              2×2 정방형으로 배치되는<br />감각적인 스타일
+            </p>
+            <div class="frame-preview frame-preview--b">
+              <div class="fp-grid">
+                <div class="fp-slot-b"></div>
+                <div class="fp-slot-b"></div>
+                <div class="fp-slot-b"></div>
+                <div class="fp-slot-b"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- KB character recommending -->
+        <div class="frame-char-wrap">
+          <svg
+            viewBox="0 0 100 110"
+            xmlns="http://www.w3.org/2000/svg"
+            class="kb-char kb-char--frame"
+          >
+            <ellipse cx="50" cy="106" rx="28" ry="6" fill="rgba(0,0,0,0.08)" />
+            <circle cx="50" cy="62" r="42" fill="#FFC200" />
+            <path
+              d="M50,12 L54,24 L67,24 L57,32 L61,45 L50,37 L39,45 L43,32 L33,24 L46,24 Z"
+              fill="#FFD700"
+              stroke="#E6A800"
+              stroke-width="1"
+            />
+            <ellipse
+              cx="37"
+              cy="48"
+              rx="12"
+              ry="8"
+              fill="rgba(255,255,255,0.3)"
+              transform="rotate(-15,37,48)"
+            />
+            <circle cx="41" cy="60" r="5.5" fill="white" />
+            <circle cx="59" cy="60" r="5.5" fill="white" />
+            <circle cx="42.5" cy="61" r="3.5" fill="#1A1A2E" />
+            <circle cx="60.5" cy="61" r="3.5" fill="#1A1A2E" />
+            <circle cx="44" cy="60" r="1.2" fill="white" />
+            <circle cx="62" cy="60" r="1.2" fill="white" />
+            <path
+              d="M 40 73 Q 50 82 60 73"
+              fill="none"
+              stroke="#1A1A2E"
+              stroke-width="2.5"
+              stroke-linecap="round"
+            />
+            <circle cx="31" cy="67" r="7" fill="#FF9090" opacity="0.35" />
+            <circle cx="69" cy="67" r="7" fill="#FF9090" opacity="0.35" />
+            <ellipse
+              cx="12"
+              cy="68"
+              rx="13"
+              ry="8"
+              fill="#FFC200"
+              stroke="#E6A800"
+              stroke-width="0.5"
+              transform="rotate(20,12,68)"
+            />
+            <ellipse
+              cx="88"
+              cy="55"
+              rx="13"
+              ry="8"
+              fill="#FFC200"
+              stroke="#E6A800"
+              stroke-width="0.5"
+              transform="rotate(-30,88,55)"
+            />
+          </svg>
+          <div class="frame-char-bubble">어떤 스타일이 좋아요? 💛</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SCREEN 3: CAMERA ===== -->
+    <section id="screen-camera" class="screen">
+      <div class="camera-layout">
+        <!-- Top bar -->
+        <div class="camera-topbar">
+          <button class="btn-back btn-back--dark" onclick="goBackFromCamera()">
+            ← 뒤로
+          </button>
+          <div id="counter-badge" class="counter-badge">
+            <span id="counter-name">세로네컷 A형</span>
+            <span class="counter-sep">|</span>
+            <span id="counter-num">0 / 4</span>
+          </div>
+          <div style="width: 80px"></div>
+        </div>
+
+        <!-- Camera area -->
+        <div class="camera-area-wrap">
+          <div class="camera-video-wrapper" id="camera-video-wrapper">
+            <video id="camera-video" autoplay playsinline muted></video>
+
+            <!-- Guide overlay -->
+            <div id="guide-overlay" class="guide-overlay">
+              <div class="guide-box">
+                <div class="guide-emoji">📸</div>
+                <p class="guide-text" id="guide-text">
+                  얼굴과 상반신이 잘 보이도록<br />위치를 맞춰주세요
+                </p>
+                <p class="guide-sub">밝은 곳에서 촬영하면 더 예쁘게 나와요</p>
+              </div>
+            </div>
+
+            <!-- Countdown -->
+            <div id="countdown-display" class="countdown-display hidden">3</div>
+
+            <!-- Flash -->
+            <div
+              id="camera-flash"
+              style="
+                opacity: 0;
+                position: absolute;
+                inset: 0;
+                background: white;
+                pointer-events: none;
+                z-index: 20;
+                border-radius: 16px;
+              "
+            ></div>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="camera-controls">
+          <div class="camera-controls-inner">
+            <div class="shutter-center">
+              <button id="shutter-btn" class="shutter-btn" aria-label="셔터">
+                <span class="shutter-icon">📷</span>
+              </button>
+              <p class="shutter-label" id="shutter-label">촬영 시작</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SCREEN 4: RESULT ===== -->
+    <section id="screen-result" class="screen">
+      <div class="result-inner">
+        <div class="result-header">
+          <h2 class="result-title">짠! KB 네컷 완성 ⭐</h2>
+          <p class="result-subtitle">
+            아래 사진을 저장해서 소중한 순간을 간직하세요
+          </p>
+        </div>
+
+        <div id="result-preview" class="result-preview"></div>
+
+        <!-- 색상 선택 -->
+        <div class="color-picker">
+          <span class="color-picker-label">색상</span>
+          <div class="color-dots">
+            <button
+              class="color-dot active"
+              data-color="yellow"
+              style="background: #ffbc00"
+              onclick="changeFrameColor('yellow')"
+              title="KB 정석"
+            ></button>
+            <button
+              class="color-dot"
+              data-color="blue"
+              style="background: #fef9c3; border: 1px solid #e0d88a"
+              onclick="changeFrameColor('blue')"
+              title="파스텔 감성"
+            ></button>
+          </div>
+        </div>
+
+        <div class="result-actions">
+          <button class="btn btn-secondary" onclick="retryPhoto()">
+            ↺ 다시 찍기
+          </button>
+          <button class="btn btn-primary" onclick="downloadResult()">
+            ↓ 저장하기
+          </button>
+        </div>
+
+        <!-- KB character celebrating -->
+        <div class="result-char-wrap">
+          <svg
+            viewBox="0 0 100 110"
+            xmlns="http://www.w3.org/2000/svg"
+            class="kb-char kb-char--result"
+          >
+            <ellipse cx="50" cy="106" rx="28" ry="6" fill="rgba(0,0,0,0.08)" />
+            <circle cx="50" cy="62" r="42" fill="#FFC200" />
+            <path
+              d="M50,12 L54,24 L67,24 L57,32 L61,45 L50,37 L39,45 L43,32 L33,24 L46,24 Z"
+              fill="#FFD700"
+              stroke="#E6A800"
+              stroke-width="1"
+            />
+            <ellipse
+              cx="37"
+              cy="48"
+              rx="12"
+              ry="8"
+              fill="rgba(255,255,255,0.3)"
+              transform="rotate(-15,37,48)"
+            />
+            <circle cx="41" cy="60" r="5.5" fill="white" />
+            <circle cx="59" cy="60" r="5.5" fill="white" />
+            <circle cx="42.5" cy="61" r="3.5" fill="#1A1A2E" />
+            <circle cx="60.5" cy="61" r="3.5" fill="#1A1A2E" />
+            <circle cx="44" cy="60" r="1.2" fill="white" />
+            <circle cx="62" cy="60" r="1.2" fill="white" />
+            <!-- Big smile for celebration -->
+            <path
+              d="M 37 72 Q 50 85 63 72"
+              fill="none"
+              stroke="#1A1A2E"
+              stroke-width="2.5"
+              stroke-linecap="round"
+            />
+            <circle cx="31" cy="67" r="7" fill="#FF9090" opacity="0.35" />
+            <circle cx="69" cy="67" r="7" fill="#FF9090" opacity="0.35" />
+            <!-- Arms raised in celebration -->
+            <ellipse
+              cx="10"
+              cy="52"
+              rx="13"
+              ry="8"
+              fill="#FFC200"
+              stroke="#E6A800"
+              stroke-width="0.5"
+              transform="rotate(-30,10,52)"
+            />
+            <ellipse
+              cx="90"
+              cy="52"
+              rx="13"
+              ry="8"
+              fill="#FFC200"
+              stroke="#E6A800"
+              stroke-width="0.5"
+              transform="rotate(30,90,52)"
+            />
+          </svg>
+          <div class="result-char-bubble">완성! 저장해서 간직하세요 💛</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== HOW-TO MODAL ===== -->
+    <div
+      id="modal-howto"
+      class="modal-overlay hidden"
+      onclick="closeHowtoOutside(event)"
+    >
+      <div class="modal-card" id="modal-card">
+        <button class="modal-close" onclick="closeHowto()">✕</button>
+        <div class="modal-header">
+          <div class="modal-logo-row">
+            <div class="kb-logo-badge kb-logo-badge--sm">
+              <span class="kb-logo-text">KB</span>
+            </div>
+            <span class="modal-title-text">사용방법</span>
+          </div>
+          <p class="modal-subtitle-text">KB 네컷 3단계로 완성!</p>
+        </div>
+
+        <div class="howto-steps">
+          <div class="howto-step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <h4 class="step-title">프레임 선택</h4>
+              <p class="step-desc">
+                세로 4컷(A형) 또는 2×2 그리드(B형) 중 원하는 스타일을
+                선택하세요.
+              </p>
+            </div>
+          </div>
+          <div class="howto-step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <h4 class="step-title">4컷 촬영</h4>
+              <p class="step-desc">
+                📷 버튼을 한 번 누르면 5초 카운트다운 후 자동으로 4장이 연속
+                촬영됩니다. B형은 정방형(1:1)으로 저장돼요.
+              </p>
+            </div>
+          </div>
+          <div class="howto-step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <h4 class="step-title">저장하기</h4>
+              <p class="step-desc">
+                KB 브랜드 프레임이 적용된 완성 사진을 PNG로 저장하세요. 인스타,
+                카카오에 공유하세요!
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="howto-tips">
+          <p class="tip-title">💡 촬영 팁</p>
+          <ul class="tip-list">
+            <li>밝은 조명 앞에 서면 더 예쁘게 나와요</li>
+            <li>카메라 권한을 미리 허용해주세요</li>
+            <li>다양한 포즈와 표정으로 4컷을 채워보세요</li>
+          </ul>
+        </div>
+
+        <button
+          class="btn btn-primary"
+          onclick="closeHowto()"
+          style="width: 100%; margin-top: 8px"
+        >
+          확인!
+        </button>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
