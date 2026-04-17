@@ -205,6 +205,7 @@ body {
 
 .main-title {
   font-size: 46px;
+
   font-weight: 900;
   color: var(--dark);
   letter-spacing: -1px;
@@ -1010,6 +1011,7 @@ body {
   justify-content: center;
   padding: 0 16px;
   margin-bottom: 16px;
+  overflow: hidden; /* 핀치 줌 시 캔버스 클리핑 */
 }
 
 .custom-preview-wrap canvas {
@@ -1019,7 +1021,7 @@ body {
   height: auto;
   display: block;
   border-radius: 10px;
-  box-shadow: 0 8px 32px rgba(26,26,46,0.15);
+  box-shadow: 0 8px 32px rgba(26, 26, 46, 0.15);
 }
 
 .custom-controls {
@@ -1053,10 +1055,12 @@ body {
   height: 56px;
   border-radius: 10px;
   border: 2px solid transparent;
-  background: rgba(255,188,0,0.08);
+  background: rgba(255, 188, 0, 0.08);
   cursor: pointer;
   padding: 4px;
-  transition: border-color 0.15s, transform 0.15s;
+  transition:
+    border-color 0.15s,
+    transform 0.15s;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -1083,6 +1087,21 @@ body {
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.char-flip-btn {
+  background: white;
+  color: #1a1a2e;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.char-flip-btn.hidden {
+  display: none;
 }
 
 .char-delete-btn.hidden {

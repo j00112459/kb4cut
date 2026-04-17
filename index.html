@@ -316,7 +316,9 @@
               <p class="shutter-label" id="shutter-label">촬영 시작</p>
             </div>
           </div>
-          <!-- <button class="dev-skip-btn" onclick="generateAndShowResult()">건너뛰기 (dev)</button> -->
+          <button class="dev-skip-btn" onclick="generateAndShowResult()">
+            건너뛰기 (dev)
+          </button>
         </div>
       </div>
     </section>
@@ -378,6 +380,13 @@
             <div class="char-palette-header">
               <span class="color-picker-label">캐릭터 추가</span>
               <button
+                id="char-flip-btn"
+                class="char-flip-btn hidden"
+                onclick="flipSelectedCharacter()"
+              >
+                ↔ 반전
+              </button>
+              <button
                 id="char-delete-btn"
                 class="char-delete-btn hidden"
                 onclick="removeSelectedCharacter()"
@@ -389,7 +398,8 @@
           </div>
 
           <p class="custom-hint">
-            클릭해서 추가 · 드래그로 이동 · 누르고 삭제 버튼
+            클릭해서 추가 · 드래그로 이동 · 누르고 삭제 버튼<br />
+            웹은 휠로 확대 · 모바일은 두 손가락으로 확대
           </p>
         </div>
 
@@ -414,8 +424,8 @@
         <div id="result-preview" class="result-preview"></div>
 
         <div class="result-actions">
-          <button class="btn btn-secondary" onclick="retryPhoto()">
-            ↺ 다시 찍기
+          <button class="btn btn-secondary" onclick="goToMain()">
+            ← 홈으로
           </button>
           <button class="btn btn-primary" onclick="downloadResult()">
             ↓ 저장하기

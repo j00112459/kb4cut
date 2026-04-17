@@ -82,6 +82,8 @@ const STICKER_FILES = {
   //쌍따봉악어: '쌍따봉악어.png',
   따봉토끼: '따봉토끼.png',
   알파카뽀뽀: '알파카뽀뽀.png',
+  주댕치: '주댕치.png',
+  정면주댕치: '정면주댕치.png',
 };
 function preloadStickers() {
   const promises = Object.entries(STICKER_FILES).map(
@@ -384,7 +386,7 @@ function buildResultCanvas() {
   const ctx = canvas.getContext('2d');
   for (const p of state.characterPlacements) {
     const img = state.stickers[p.key];
-    if (img) ctx.drawImage(img, p.x, p.y, p.w, p.h);
+    if (img) drawSticker(ctx, img, p);
   }
 
   state.resultCanvas = canvas;
@@ -741,6 +743,15 @@ let resizeState = {
 };
 let longPressTimer = null;
 
+// 핀치 줌 / 팬 상태
+let viewScale = 1;
+let viewTransX = 0;
+let viewTransY = 0;
+let pointerCache = []; // [{id, x, y}] 활성 포인터
+let prevPinchDist = -1;
+let isPanMode = false;
+let panStart = { x: 0, y: 0, tx: 0, ty: 0 };
+
 // 기본 캐릭터 배치 없음 — 커스텀 페이지에서 직접 추가
 function initDefaultCharacterPlacements() {
   state.characterPlacements = [];
@@ -750,6 +761,11 @@ function showCustomizeScreen() {
   showScreen('screen-custom');
   customBaseCanvas = null;
   state.selectedCharIdx = -1;
+  viewScale = 1;
+  viewTransX = 0;
+  viewTransY = 0;
+  pointerCache = [];
+  prevPinchDist = -1;
   // 스티커 로드 완료 후 팔레트 생성 (새 파일 추가 시에도 반영)
   preloadStickers().then(() => {
     initCustomCanvas();
@@ -844,7 +860,7 @@ function redrawCustomCanvas() {
       ctx.strokeRect(p.x - 3, p.y - 3, p.w + 6, p.h + 6);
       ctx.setLineDash([]);
     }
-    ctx.drawImage(img, p.x, p.y, p.w, p.h);
+    drawSticker(ctx, img, p);
     ctx.restore();
   }
 
@@ -901,6 +917,14 @@ function setupCustomCanvasEvents(canvas) {
   });
   canvas.addEventListener('pointerup', onCustomPointerUp);
   canvas.addEventListener('pointercancel', onCustomPointerUp);
+  canvas.addEventListener('wheel', onCustomWheel, { passive: false });
+}
+
+function onCustomWheel(e) {
+  e.preventDefault();
+  const delta = e.deltaY < 0 ? 1.1 : 0.9;
+  viewScale = Math.min(4, Math.max(1, viewScale * delta));
+  applyViewTransform();
 }
 
 function canvasCoords(e) {
@@ -922,6 +946,22 @@ function hitTest(cx, cy) {
 
 function onCustomPointerDown(e) {
   e.preventDefault();
+
+  // 포인터 캐시 업데이트
+  pointerCache = pointerCache.filter((p) => p.id !== e.pointerId);
+  pointerCache.push({ id: e.pointerId, x: e.clientX, y: e.clientY });
+
+  // 2손가락 → 핀치 줌 모드
+  if (pointerCache.length >= 2) {
+    dragState.active = false;
+    resizeState.active = false;
+    isPanMode = false;
+    clearTimeout(longPressTimer);
+    prevPinchDist = getPinchDist();
+    return;
+  }
+
+  // 1손가락: 기존 드래그/리사이즈 로직
   const { x, y } = canvasCoords(e);
 
   // 1순위: 핸들 hit test (선택된 캐릭터의 모서리)
@@ -949,15 +989,48 @@ function onCustomPointerDown(e) {
       e.target.setPointerCapture(e.pointerId);
     } catch (_) {}
     longPressTimer = setTimeout(() => removeSelectedCharacter(), 700);
+    isPanMode = false;
   } else {
+    // 3순위: 빈 공간 → 팬 모드
     state.selectedCharIdx = -1;
+    isPanMode = true;
+    panStart = { x: e.clientX, y: e.clientY, tx: viewTransX, ty: viewTransY };
+    try {
+      e.target.setPointerCapture(e.pointerId);
+    } catch (_) {}
   }
   redrawCustomCanvas();
 }
 
 function onCustomPointerMove(e) {
   e.preventDefault();
+
+  // 포인터 캐시 업데이트
+  const pi = pointerCache.findIndex((p) => p.id === e.pointerId);
+  if (pi >= 0) pointerCache[pi] = { id: e.pointerId, x: e.clientX, y: e.clientY };
+
+  // 2손가락 → 핀치 줌
+  if (pointerCache.length >= 2) {
+    const dist = getPinchDist();
+    if (prevPinchDist > 0) {
+      const ratio = dist / prevPinchDist;
+      viewScale = Math.min(4, Math.max(1, viewScale * ratio));
+      applyViewTransform();
+    }
+    prevPinchDist = dist;
+    return;
+  }
+
   clearTimeout(longPressTimer);
+
+  // 팬 모드 (빈 공간 드래그)
+  if (isPanMode) {
+    viewTransX = panStart.tx + (e.clientX - panStart.x);
+    viewTransY = panStart.ty + (e.clientY - panStart.y);
+    applyViewTransform();
+    return;
+  }
+
   const { x, y } = canvasCoords(e);
 
   // 리사이즈 모드
@@ -1001,10 +1074,13 @@ function onCustomPointerMove(e) {
   redrawCustomCanvas();
 }
 
-function onCustomPointerUp() {
+function onCustomPointerUp(e) {
   clearTimeout(longPressTimer);
   dragState.active = false;
   resizeState.active = false;
+  isPanMode = false;
+  prevPinchDist = -1;
+  if (e) pointerCache = pointerCache.filter((p) => p.id !== e.pointerId);
 }
 
 // ── 캐릭터 추가 / 삭제 ──
@@ -1018,8 +1094,28 @@ function addCharacterToCanvas(key) {
     y: Math.round(canvas.height / 2 - size / 2),
     w: size,
     h: size,
+    flipX: false,
   });
   state.selectedCharIdx = state.characterPlacements.length - 1;
+  redrawCustomCanvas();
+}
+
+function drawSticker(ctx, img, p) {
+  if (p.flipX) {
+    ctx.save();
+    ctx.translate(p.x + p.w, p.y);
+    ctx.scale(-1, 1);
+    ctx.drawImage(img, 0, 0, p.w, p.h);
+    ctx.restore();
+  } else {
+    ctx.drawImage(img, p.x, p.y, p.w, p.h);
+  }
+}
+
+function flipSelectedCharacter() {
+  if (state.selectedCharIdx < 0) return;
+  const p = state.characterPlacements[state.selectedCharIdx];
+  p.flipX = !p.flipX;
   redrawCustomCanvas();
 }
 
@@ -1031,9 +1127,11 @@ function removeSelectedCharacter() {
 }
 
 function updateDeleteBtn() {
-  const btn = document.getElementById('char-delete-btn');
-  if (!btn) return;
-  btn.classList.toggle('hidden', state.selectedCharIdx < 0);
+  const del = document.getElementById('char-delete-btn');
+  const flip = document.getElementById('char-flip-btn');
+  const selected = state.selectedCharIdx >= 0;
+  if (del) del.classList.toggle('hidden', !selected);
+  if (flip) flip.classList.toggle('hidden', !selected);
 }
 
 // ── 팔레트 생성 ──
@@ -1063,6 +1161,21 @@ function populateCharPalette() {
     }
     palette.appendChild(btn);
   }
+}
+
+// ── 핀치 줌 헬퍼 ──
+function getPinchDist() {
+  if (pointerCache.length < 2) return 0;
+  const dx = pointerCache[0].x - pointerCache[1].x;
+  const dy = pointerCache[0].y - pointerCache[1].y;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function applyViewTransform() {
+  const canvas = document.getElementById('custom-canvas');
+  if (!canvas) return;
+  canvas.style.transformOrigin = '50% 0';
+  canvas.style.transform = `translate(${viewTransX}px, ${viewTransY}px) scale(${viewScale})`;
 }
 
 // 모든 색상 버튼 동기화 (커스텀 + 결과 화면)
