@@ -1,6 +1,21 @@
 <!doctype html>
 <html lang="ko">
   <head>
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-D00ERNWWXM"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag('js', new Date());
+
+      gtag('config', 'G-D00ERNWWXM');
+    </script>
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>KB 네컷 | KB 부트캠프 7기</title>
@@ -113,7 +128,7 @@
             <i class="fa-solid fa-camera"></i> 사진 찍으러 가기
           </button>
           <button class="btn btn-secondary" onclick="showHowto()">
-            ? 사용방법
+            사용방법
           </button>
         </div>
       </div>
@@ -301,6 +316,87 @@
               <p class="shutter-label" id="shutter-label">촬영 시작</p>
             </div>
           </div>
+          <!-- <button class="dev-skip-btn" onclick="generateAndShowResult()">건너뛰기 (dev)</button> -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SCREEN 3.5: CUSTOMIZE ===== -->
+    <section id="screen-custom" class="screen">
+      <div class="custom-inner">
+        <div class="custom-topbar">
+          <button class="btn-back btn-back--dark" onclick="backFromCustom()">
+            ← 뒤로
+          </button>
+          <span class="custom-topbar-title"></span>
+          <div style="width: 80px"></div>
+        </div>
+
+        <!-- 캔버스 미리보기 -->
+        <div class="custom-preview-wrap" id="custom-preview-wrap">
+          <!-- canvas injected by JS -->
+        </div>
+
+        <div class="custom-controls">
+          <!-- 색상 선택 -->
+          <div class="color-picker">
+            <span class="color-picker-label">프레임 색상</span>
+            <div class="color-dots">
+              <button
+                class="color-dot active"
+                data-color="yellow"
+                style="background: #ffbc00"
+                onclick="changeFrameColor('yellow')"
+                title="KB 정석"
+              ></button>
+              <button
+                class="color-dot"
+                data-color="blue"
+                style="background: #fef9c3; border: 1px solid #e0d88a"
+                onclick="changeFrameColor('blue')"
+                title="파스텔 감성"
+              ></button>
+              <button
+                class="color-dot"
+                data-color="black"
+                style="background: #1a1a2e"
+                onclick="changeFrameColor('black')"
+                title="블랙"
+              ></button>
+              <button
+                class="color-dot"
+                data-color="white"
+                style="background: #ffffff; border: 2px solid #ddd"
+                onclick="changeFrameColor('white')"
+                title="화이트"
+              ></button>
+            </div>
+          </div>
+
+          <!-- 캐릭터 팔레트 -->
+          <div class="char-palette-section">
+            <div class="char-palette-header">
+              <span class="color-picker-label">캐릭터 추가</span>
+              <button
+                id="char-delete-btn"
+                class="char-delete-btn hidden"
+                onclick="removeSelectedCharacter()"
+              >
+                ✕ 삭제
+              </button>
+            </div>
+            <div class="char-palette" id="char-palette"></div>
+          </div>
+
+          <p class="custom-hint">
+            클릭해서 추가 · 드래그로 이동 · 누르고 삭제 버튼
+          </p>
+        </div>
+
+        <div class="custom-actions">
+          <button class="btn btn-primary" onclick="finalizeCustomization()">
+            완성하기 →
+          </button>
         </div>
       </div>
     </section>
@@ -316,27 +412,6 @@
         </div>
 
         <div id="result-preview" class="result-preview"></div>
-
-        <!-- 색상 선택 -->
-        <div class="color-picker">
-          <span class="color-picker-label">색상</span>
-          <div class="color-dots">
-            <button
-              class="color-dot active"
-              data-color="yellow"
-              style="background: #ffbc00"
-              onclick="changeFrameColor('yellow')"
-              title="KB 정석"
-            ></button>
-            <button
-              class="color-dot"
-              data-color="blue"
-              style="background: #fef9c3; border: 1px solid #e0d88a"
-              onclick="changeFrameColor('blue')"
-              title="파스텔 감성"
-            ></button>
-          </div>
-        </div>
 
         <div class="result-actions">
           <button class="btn btn-secondary" onclick="retryPhoto()">
@@ -428,7 +503,7 @@
             </div>
             <span class="modal-title-text">사용방법</span>
           </div>
-          <p class="modal-subtitle-text">KB 네컷 3단계로 완성!</p>
+          <p class="modal-subtitle-text">찍는 방법</p>
         </div>
 
         <div class="howto-steps">
@@ -455,10 +530,10 @@
           <div class="howto-step">
             <div class="step-num">3</div>
             <div class="step-content">
-              <h4 class="step-title">저장하기</h4>
+              <h4 class="step-title">커스텀하고 저장하기</h4>
               <p class="step-desc">
-                KB 브랜드 프레임이 적용된 완성 사진을 PNG로 저장하세요. 인스타,
-                카카오에 공유하세요!
+                프레임을 커스텀 해봐요! KB 친구들을 내 맘대로 배치 할 수
+                있습니다.
               </p>
             </div>
           </div>
@@ -470,6 +545,9 @@
             <li>밝은 조명 앞에 서면 더 예쁘게 나와요</li>
             <li>카메라 권한을 미리 허용해주세요</li>
             <li>다양한 포즈와 표정으로 4컷을 채워보세요</li>
+            <li>
+              촬영된 사진은 서버에 저장되지 않아요. 내 기기에만 저장됩니다.
+            </li>
           </ul>
         </div>
 

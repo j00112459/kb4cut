@@ -13,7 +13,9 @@ const state = {
   isCapturing: false,
   resultCanvas: null,
   stickers: {}, // 로드된 스티커 이미지 캐시
-  frameColor: 'yellow', // 'yellow' | 'blue'
+  frameColor: 'yellow', // 'yellow' | 'blue' | 'black' | 'white'
+  characterPlacements: [], // [{key, x, y, w, h}] — 커스텀 캐릭터 배치
+  selectedCharIdx: -1, // 현재 선택된 캐릭터 인덱스
 };
 
 // ========== FRAME THEMES ==========
@@ -42,24 +44,45 @@ const FRAME_THEMES = {
     bottomMsg: "IT's your life 7기",
     bottomSub: "console.log('인생 확인중')",
   },
+  // 블랙
+  black: {
+    bar: '#1A1A2E',
+    bg: '#1A1A2E',
+    accent: '#1A1A2E',
+    text: '#FFFFFF',
+    textSub: 'rgba(255,255,255,0.75)',
+    textFaint: 'rgba(255,255,255,0.50)',
+    watermark: 'rgba(255,255,255,0.35)',
+    bottomMsg: "IT's your life 7기",
+    bottomSub: '완주기원',
+  },
+  // 화이트
+  white: {
+    bar: '#FFFFFF',
+    bg: '#FFFFFF',
+    accent: '#FFFFFF',
+    text: '#1A1A2E',
+    textSub: 'rgba(26,26,46,0.65)',
+    textFaint: 'rgba(26,26,46,0.45)',
+    watermark: 'rgba(26,26,46,0.35)',
+    bottomMsg: "IT's your life 7기",
+    bottomSub: '부트캠프와 함께하는 특별한 순간',
+  },
 };
 
 // ========== STICKER PRELOAD ==========
 const STICKER_FILES = {
-  롤로라무: '롤로라무.png',
-  롤로라무2: '롤로라무2.png',
-  루나키키: '루나키키.png',
-  루나키키2: '루나키키 2.png',
-  멜랑콜리: '멜랑콜리.png',
-  멜랑콜리2: '멜랑콜리2.png',
-  심쿵비비: '심쿵비비.png',
-  심쿵비비2: '심쿵비비 2.png',
-  심쿵비비3: '심쿵비비 3.png',
-  심쿵비비4: '심쿵비비 4.png',
-  포스아거: '포스아거.png',
-  포스아거1: '포스아거 1.png',
+  왕관: '왕관.png',
+  곰돌이서있음: '곰돌이서있음.png',
+  앉아있는곰돌이: '앉아있는곰돌이-Photoroom.png',
+  곰돌이하트: '곰돌이하트.png',
+  따봉브로콜리: '따봉브로콜리.png',
+  점프브로콜리: '점프브로콜리.png',
+  따봉악어: '따봉악어-Photoroom.png',
+  쌍따봉악어: '쌍따봉악어.png',
+  따봉토끼: '따봉토끼.png',
+  알파카뽀뽀: '알파카뽀뽀.png',
 };
-
 function preloadStickers() {
   const promises = Object.entries(STICKER_FILES).map(
     ([key, file]) =>
@@ -345,8 +368,9 @@ function updateCounter() {
 // ========== RESULT GENERATION ==========
 function generateAndShowResult() {
   stopCamera();
-  buildResultCanvas();
-  showScreen('screen-result');
+  // 커스텀 화면으로 이동 (기본 캐릭터 배치 초기화)
+  initDefaultCharacterPlacements();
+  showCustomizeScreen();
 }
 
 function buildResultCanvas() {
@@ -356,8 +380,15 @@ function buildResultCanvas() {
       ? renderFrameA(state.photos, theme)
       : renderFrameB(state.photos, theme);
 
+  // state.characterPlacements에 있는 캐릭터를 프레임 위에 그림
+  const ctx = canvas.getContext('2d');
+  for (const p of state.characterPlacements) {
+    const img = state.stickers[p.key];
+    if (img) ctx.drawImage(img, p.x, p.y, p.w, p.h);
+  }
+
   state.resultCanvas = canvas;
-  canvas.dataset.frame = state.frameType; // CSS에서 타입별 크기 조절용
+  canvas.dataset.frame = state.frameType;
 
   const preview = document.getElementById('result-preview');
   if (preview) {
@@ -371,7 +402,15 @@ function changeFrameColor(color) {
   document.querySelectorAll('.color-dot').forEach((el) => {
     el.classList.toggle('active', el.dataset.color === color);
   });
-  buildResultCanvas();
+  const onCustom = document
+    .getElementById('screen-custom')
+    ?.classList.contains('active');
+  if (onCustom) {
+    customBaseCanvas = null; // 베이스 캔버스 캐시 무효화
+    redrawCustomCanvas();
+  } else {
+    buildResultCanvas();
+  }
 }
 
 // ---------- Frame A: 인생네컷 세로 스트립 (4컷 세로 배열) ----------
@@ -452,9 +491,6 @@ function renderFrameA(photos, theme = FRAME_THEMES.yellow) {
       ctx.fillText('📷', x + PHOTO_W / 2, y + PHOTO_H / 2 + 8);
     }
   }
-
-  // 프레임 캐릭터 장식 (사진 루프 끝난 뒤, 클립 해제 후 그림)
-  drawFrameCharacters(ctx, 'A', W, H, PAD, PHOTO_H, GAP, TOP);
 
   const botY = TOP + PHOTO_H * 4 + GAP * 3;
   ctx.fillStyle = theme.bar;
@@ -566,9 +602,6 @@ function renderFrameB(photos, theme = FRAME_THEMES.yellow) {
     }
   }
 
-  // ④ 캐릭터 장식 (사진 루프 끝난 뒤, 프레임 경계에 걸치도록)
-  drawFrameCharacters(ctx, 'B', W, H, SIDE, PHOTO_H, GAP, TOP);
-
   // ⑤ 하단 프레임 텍스트
   const botY = TOP + PHOTO_H * 2 + GAP;
 
@@ -592,41 +625,6 @@ function renderFrameB(photos, theme = FRAME_THEMES.yellow) {
   ctx.fillText('KB Kookmin Bank', W - 12, botY + BOT - 8);
 
   return canvas;
-}
-
-// ========== FRAME CHARACTER DECORATIONS ==========
-// 사진 루프가 끝난 뒤 클립 해제 상태에서 호출 — 프레임 가장자리에 캐릭터 배치
-// x, y 값을 수정하면 위치를 바꿀 수 있습니다
-// B형: pw=사진가로, ph=사진세로 / A형: pw 미사용, ph=사진세로
-function drawFrameCharacters(ctx, frameType, W, H, PAD, ph, GAP, TOP) {
-  const s = state.stickers;
-
-  if (frameType === 'B') {
-    // B형: 사진 2×2, 각 249×332 (3:4 세로형)
-    // 두 행 사이 중간 y 기준점
-    const midY = TOP + ph + GAP / 2;
-
-    // 왼쪽 가장자리 — 두 행 사이 (캔버스 바깥으로 약간 튀어나옴)
-    if (s.롤로라무) ctx.drawImage(s.롤로라무, -28, midY - 80, 120, 120);
-    // 오른쪽 가장자리
-    if (s.심쿵비비) ctx.drawImage(s.심쿵비비, W - 92, midY - 20, 115, 115);
-    // 상단 바 왼쪽
-    if (s.루나키키2) ctx.drawImage(s.루나키키2, PAD + 5, TOP - 35, 75, 75);
-    // 하단 바 오른쪽
-    if (s.포스아거1) ctx.drawImage(s.포스아거1, W - 100, H - 130, 90, 90);
-  } else {
-    // A형 (600×~1490, 사진 4장 560×315 세로 배열)
-    const midH = H / 2; // 캔버스 세로 중간
-
-    // 왼쪽 중간
-    if (s.멜랑콜리) ctx.drawImage(s.멜랑콜리, -25, midH - 110, 120, 120);
-    // 오른쪽 중간 (아래로 약간 내림)
-    if (s.심쿵비비3) ctx.drawImage(s.심쿵비비3, W - 95, midH + 30, 115, 115);
-    // 상단 바 왼쪽
-    if (s.루나키키) ctx.drawImage(s.루나키키, PAD + 5, TOP - 30, 70, 70);
-    // 하단 바 오른쪽
-    if (s.롤로라무2) ctx.drawImage(s.롤로라무2, W - 95, H - 130, 85, 85);
-  }
 }
 
 // ========== CANVAS HELPERS ==========
@@ -722,9 +720,356 @@ function downloadResult() {
 function retryPhoto() {
   state.photos = [];
   state.resultCanvas = null;
+  state.characterPlacements = [];
+  state.selectedCharIdx = -1;
+  customBaseCanvas = null;
   resetCameraUI();
   showScreen('screen-camera');
   initCamera();
+}
+
+// ========== CUSTOMIZE SCREEN ==========
+
+let customBaseCanvas = null; // 베이스 프레임 캐시 (색상 바뀔 때 무효화)
+let dragState = { active: false, idx: -1, offsetX: 0, offsetY: 0 };
+let resizeState = {
+  active: false,
+  handle: null,
+  startX: 0,
+  startY: 0,
+  origP: null,
+};
+let longPressTimer = null;
+
+// 기본 캐릭터 배치 없음 — 커스텀 페이지에서 직접 추가
+function initDefaultCharacterPlacements() {
+  state.characterPlacements = [];
+}
+
+function showCustomizeScreen() {
+  showScreen('screen-custom');
+  customBaseCanvas = null;
+  state.selectedCharIdx = -1;
+  // 스티커 로드 완료 후 팔레트 생성 (새 파일 추가 시에도 반영)
+  preloadStickers().then(() => {
+    initCustomCanvas();
+    populateCharPalette();
+    syncColorDots();
+  });
+}
+
+function backFromCustom() {
+  state.characterPlacements = [];
+  state.selectedCharIdx = -1;
+  customBaseCanvas = null;
+  retryPhoto();
+}
+
+function finalizeCustomization() {
+  buildResultCanvas();
+  showScreen('screen-result');
+  // 결과 화면 색상 버튼도 동기화
+  syncColorDots();
+}
+
+// ── 커스텀 캔버스 초기화 ──
+function initCustomCanvas() {
+  const wrap = document.getElementById('custom-preview-wrap');
+  if (!wrap) return;
+
+  let canvas = document.getElementById('custom-canvas');
+  if (!canvas) {
+    canvas = document.createElement('canvas');
+    canvas.id = 'custom-canvas';
+    canvas.style.touchAction = 'none';
+    canvas.style.cursor = 'grab';
+    wrap.prepend(canvas);
+    setupCustomCanvasEvents(canvas);
+  }
+
+  // 프레임 타입별 캔버스 크기 설정
+  if (state.frameType === 'A') {
+    const W = 480,
+      PAD = 16,
+      TOP = 58,
+      GAP = 8,
+      BOT = 120;
+    const PHOTO_H = Math.round(((W - PAD * 2) * 3) / 4);
+    canvas.width = W;
+    canvas.height = TOP + PHOTO_H * 4 + GAP * 3 + BOT;
+  } else {
+    const W = 600,
+      SIDE = 14,
+      TOP = 64,
+      GAP = 6,
+      BOT = 80;
+    const PHOTO_W = Math.floor((W - SIDE * 2 - GAP) / 2);
+    const PHOTO_H = Math.round((PHOTO_W * 4) / 3);
+    canvas.width = W;
+    canvas.height = TOP + PHOTO_H * 2 + GAP + BOT;
+  }
+  canvas.dataset.frame = state.frameType;
+
+  redrawCustomCanvas();
+}
+
+// ── 커스텀 캔버스 리드로우 ──
+function redrawCustomCanvas() {
+  const canvas = document.getElementById('custom-canvas');
+  if (!canvas) return;
+  const theme = FRAME_THEMES[state.frameColor] || FRAME_THEMES.yellow;
+
+  // 베이스 프레임 캐시 (드래그 중 매번 새로 렌더링 방지)
+  if (!customBaseCanvas) {
+    customBaseCanvas =
+      state.frameType === 'A'
+        ? renderFrameA(state.photos, theme)
+        : renderFrameB(state.photos, theme);
+  }
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(customBaseCanvas, 0, 0);
+
+  // 배치된 캐릭터 그리기
+  for (let i = 0; i < state.characterPlacements.length; i++) {
+    const p = state.characterPlacements[i];
+    const img = state.stickers[p.key];
+    if (!img) continue;
+    ctx.save();
+    if (i === state.selectedCharIdx) {
+      ctx.strokeStyle = '#FFBC00';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([6, 3]);
+      ctx.strokeRect(p.x - 3, p.y - 3, p.w + 6, p.h + 6);
+      ctx.setLineDash([]);
+    }
+    ctx.drawImage(img, p.x, p.y, p.w, p.h);
+    ctx.restore();
+  }
+
+  // 선택된 캐릭터에 리사이즈 핸들 표시
+  if (state.selectedCharIdx >= 0) {
+    const p = state.characterPlacements[state.selectedCharIdx];
+    if (p) drawResizeHandles(ctx, p);
+  }
+
+  updateDeleteBtn();
+}
+
+function drawResizeHandles(ctx, p) {
+  const HS = 14; // 핸들 크기 (canvas px)
+  const corners = getHandlePositions(p);
+  for (const h of corners) {
+    ctx.fillStyle = '#FFFFFF';
+    ctx.strokeStyle = '#FFBC00';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.rect(h.x - HS / 2, h.y - HS / 2, HS, HS);
+    ctx.fill();
+    ctx.stroke();
+  }
+}
+
+function getHandlePositions(p) {
+  return [
+    { id: 'tl', x: p.x, y: p.y },
+    { id: 'tr', x: p.x + p.w, y: p.y },
+    { id: 'bl', x: p.x, y: p.y + p.h },
+    { id: 'br', x: p.x + p.w, y: p.y + p.h },
+  ];
+}
+
+function hitTestHandle(cx, cy) {
+  if (state.selectedCharIdx < 0) return null;
+  const p = state.characterPlacements[state.selectedCharIdx];
+  if (!p) return null;
+  const HIT = 18; // 터치 고려한 hit area
+  for (const h of getHandlePositions(p)) {
+    if (Math.abs(cx - h.x) <= HIT && Math.abs(cy - h.y) <= HIT) return h.id;
+  }
+  return null;
+}
+
+// ── 포인터 이벤트 설정 ──
+function setupCustomCanvasEvents(canvas) {
+  canvas.addEventListener('pointerdown', onCustomPointerDown, {
+    passive: false,
+  });
+  canvas.addEventListener('pointermove', onCustomPointerMove, {
+    passive: false,
+  });
+  canvas.addEventListener('pointerup', onCustomPointerUp);
+  canvas.addEventListener('pointercancel', onCustomPointerUp);
+}
+
+function canvasCoords(e) {
+  const canvas = document.getElementById('custom-canvas');
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: (e.clientX - rect.left) * (canvas.width / rect.width),
+    y: (e.clientY - rect.top) * (canvas.height / rect.height),
+  };
+}
+
+function hitTest(cx, cy) {
+  for (let i = state.characterPlacements.length - 1; i >= 0; i--) {
+    const p = state.characterPlacements[i];
+    if (cx >= p.x && cx <= p.x + p.w && cy >= p.y && cy <= p.y + p.h) return i;
+  }
+  return -1;
+}
+
+function onCustomPointerDown(e) {
+  e.preventDefault();
+  const { x, y } = canvasCoords(e);
+
+  // 1순위: 핸들 hit test (선택된 캐릭터의 모서리)
+  const handle = hitTestHandle(x, y);
+  if (handle) {
+    const orig = { ...state.characterPlacements[state.selectedCharIdx] };
+    resizeState = { active: true, handle, startX: x, startY: y, origP: orig };
+    try {
+      e.target.setPointerCapture(e.pointerId);
+    } catch (_) {}
+    return;
+  }
+
+  // 2순위: 캐릭터 본체 드래그
+  const idx = hitTest(x, y);
+  if (idx >= 0) {
+    dragState = {
+      active: true,
+      idx,
+      offsetX: x - state.characterPlacements[idx].x,
+      offsetY: y - state.characterPlacements[idx].y,
+    };
+    state.selectedCharIdx = idx;
+    try {
+      e.target.setPointerCapture(e.pointerId);
+    } catch (_) {}
+    longPressTimer = setTimeout(() => removeSelectedCharacter(), 700);
+  } else {
+    state.selectedCharIdx = -1;
+  }
+  redrawCustomCanvas();
+}
+
+function onCustomPointerMove(e) {
+  e.preventDefault();
+  clearTimeout(longPressTimer);
+  const { x, y } = canvasCoords(e);
+
+  // 리사이즈 모드
+  if (resizeState.active) {
+    const p = state.characterPlacements[state.selectedCharIdx];
+    const o = resizeState.origP;
+    const dx = x - resizeState.startX;
+    const dy = y - resizeState.startY;
+    const MIN = 30;
+    switch (resizeState.handle) {
+      case 'br':
+        p.w = Math.max(MIN, o.w + dx);
+        p.h = Math.max(MIN, o.h + dy);
+        break;
+      case 'bl':
+        p.x = Math.min(o.x + o.w - MIN, o.x + dx);
+        p.w = Math.max(MIN, o.w - dx);
+        p.h = Math.max(MIN, o.h + dy);
+        break;
+      case 'tr':
+        p.y = Math.min(o.y + o.h - MIN, o.y + dy);
+        p.w = Math.max(MIN, o.w + dx);
+        p.h = Math.max(MIN, o.h - dy);
+        break;
+      case 'tl':
+        p.x = Math.min(o.x + o.w - MIN, o.x + dx);
+        p.y = Math.min(o.y + o.h - MIN, o.y + dy);
+        p.w = Math.max(MIN, o.w - dx);
+        p.h = Math.max(MIN, o.h - dy);
+        break;
+    }
+    redrawCustomCanvas();
+    return;
+  }
+
+  // 드래그 이동 모드
+  if (!dragState.active) return;
+  const p = state.characterPlacements[dragState.idx];
+  p.x = Math.round(x - dragState.offsetX);
+  p.y = Math.round(y - dragState.offsetY);
+  redrawCustomCanvas();
+}
+
+function onCustomPointerUp() {
+  clearTimeout(longPressTimer);
+  dragState.active = false;
+  resizeState.active = false;
+}
+
+// ── 캐릭터 추가 / 삭제 ──
+function addCharacterToCanvas(key) {
+  const canvas = document.getElementById('custom-canvas');
+  if (!canvas) return;
+  const size = Math.round(canvas.width * 0.18);
+  state.characterPlacements.push({
+    key,
+    x: Math.round(canvas.width / 2 - size / 2),
+    y: Math.round(canvas.height / 2 - size / 2),
+    w: size,
+    h: size,
+  });
+  state.selectedCharIdx = state.characterPlacements.length - 1;
+  redrawCustomCanvas();
+}
+
+function removeSelectedCharacter() {
+  if (state.selectedCharIdx < 0) return;
+  state.characterPlacements.splice(state.selectedCharIdx, 1);
+  state.selectedCharIdx = -1;
+  redrawCustomCanvas();
+}
+
+function updateDeleteBtn() {
+  const btn = document.getElementById('char-delete-btn');
+  if (!btn) return;
+  btn.classList.toggle('hidden', state.selectedCharIdx < 0);
+}
+
+// ── 팔레트 생성 ──
+function populateCharPalette() {
+  const palette = document.getElementById('char-palette');
+  if (!palette) return;
+  palette.innerHTML = '';
+  for (const key of Object.keys(STICKER_FILES)) {
+    const img = state.stickers[key];
+    const btn = document.createElement('button');
+    btn.className = 'char-thumb';
+    btn.title = key;
+
+    if (img) {
+      // 로드 성공 → 썸네일 캔버스
+      btn.onclick = () => addCharacterToCanvas(key);
+      const tc = document.createElement('canvas');
+      tc.width = tc.height = 60;
+      tc.getContext('2d').drawImage(img, 0, 0, 60, 60);
+      btn.appendChild(tc);
+    } else {
+      // 로드 실패 → 파일명 없음 표시 (클릭 비활성)
+      btn.disabled = true;
+      btn.style.opacity = '0.35';
+      btn.style.fontSize = '9px';
+      btn.textContent = '파일없음';
+    }
+    palette.appendChild(btn);
+  }
+}
+
+// 모든 색상 버튼 동기화 (커스텀 + 결과 화면)
+function syncColorDots() {
+  document.querySelectorAll('.color-dot').forEach((el) => {
+    el.classList.toggle('active', el.dataset.color === state.frameColor);
+  });
 }
 
 // ========== UTILS ==========
