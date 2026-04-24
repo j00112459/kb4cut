@@ -84,6 +84,8 @@ const STICKER_FILES = {
   알파카뽀뽀: '알파카뽀뽀.png',
   주댕치: '주댕치.png',
   정면주댕치: '정면주댕치.png',
+  부트캠프픽셀로고누끼: '부트캠프픽셀로고누끼.png',
+  KB픽셀풍선모양누끼: 'KB픽셀풍선모양누끼.png',
 };
 function preloadStickers() {
   const promises = Object.entries(STICKER_FILES).map(
@@ -1007,7 +1009,8 @@ function onCustomPointerMove(e) {
 
   // 포인터 캐시 업데이트
   const pi = pointerCache.findIndex((p) => p.id === e.pointerId);
-  if (pi >= 0) pointerCache[pi] = { id: e.pointerId, x: e.clientX, y: e.clientY };
+  if (pi >= 0)
+    pointerCache[pi] = { id: e.pointerId, x: e.clientX, y: e.clientY };
 
   // 2손가락 → 핀치 줌
   if (pointerCache.length >= 2) {
