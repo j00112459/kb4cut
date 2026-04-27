@@ -36,7 +36,8 @@ export default async function handler(req, res) {
       })
     );
 
-    const url = `https://kb-4cut.s3.ap-northeast-2.amazonaws.com/${filename}`;
+    const base = process.env.CLOUDFRONT_URL || 'https://kb-4cut.s3.ap-northeast-2.amazonaws.com';
+    const url = `${base}/${filename}`;
     res.status(200).json({ url });
   } catch (err) {
     console.error(err);

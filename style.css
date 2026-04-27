@@ -206,7 +206,7 @@ body {
 .main-title {
   font-size: 46px;
 
-  btn btn-primaryfont-weight: 850;
+  font-weight: 900;
   color: var(--dark);
   letter-spacing: -1px;
   line-height: 1;
@@ -1135,6 +1135,79 @@ body {
 
 .result-actions .btn {
   flex: 1;
+}
+
+/* 재촬영 스트립 */
+.photo-strip-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.photo-strip {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.photo-thumb-wrap {
+  position: relative;
+  border-radius: 6px;
+  overflow: visible;
+}
+
+.photo-thumb-wrap canvas {
+  display: block;
+  border-radius: 6px;
+  border: 2px solid transparent;
+}
+
+.photo-retake-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--kb-yellow);
+  border: none;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* 사진 필터 */
+.filter-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-btns {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1.5px solid #ddd;
+  background: white;
+  color: var(--dark);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: all 0.15s ease;
+}
+
+.filter-btn.active {
+  background: var(--kb-yellow);
+  border-color: var(--kb-yellow);
 }
 
 /* QR 모달 */

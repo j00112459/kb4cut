@@ -340,6 +340,24 @@
         </div>
 
         <div class="custom-controls">
+          <!-- 사진 재촬영 -->
+          <div class="photo-strip-section">
+            <span class="color-picker-label">사진 재촬영</span>
+            <div class="photo-strip" id="photo-strip"></div>
+          </div>
+
+          <!-- 사진 필터 -->
+          <div class="filter-section">
+            <span class="color-picker-label">사진 필터</span>
+            <div class="filter-btns">
+              <button class="filter-btn active" data-filter="none" onclick="changePhotoFilter('none')">기본</button>
+              <button class="filter-btn" data-filter="bw" onclick="changePhotoFilter('bw')">흑백</button>
+              <button class="filter-btn" data-filter="vintage" onclick="changePhotoFilter('vintage')">빈티지</button>
+              <button class="filter-btn" data-filter="vivid" onclick="changePhotoFilter('vivid')">선명</button>
+              <button class="filter-btn" data-filter="bright" onclick="changePhotoFilter('bright')">밝게</button>
+            </div>
+          </div>
+
           <!-- 색상 선택 -->
           <div class="color-picker">
             <span class="color-picker-label">프레임 색상</span>
@@ -579,6 +597,7 @@
         <p id="qr-modal-status" class="qr-modal-status">QR 생성 중...</p>
         <div id="qr-modal-code" class="qr-modal-code"></div>
         <p class="qr-modal-hint">QR 스캔하면 폰에서 바로 저장 가능</p>
+        <button id="qr-retry-btn" class="btn btn-secondary hidden" style="width:100%;margin-top:4px;padding:10px" onclick="uploadAndShowQR()">↺ 다시 시도</button>
       </div>
     </div>
 

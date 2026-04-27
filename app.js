@@ -17,6 +17,8 @@ const state = {
   characterPlacements: [], // [{key, x, y, w, h}] — 커스텀 캐릭터 배치
   selectedCharIdx: -1, // 현재 선택된 캐릭터 인덱스
   qrUrl: null, // 업로드된 S3 URL
+  retakingIdx: -1, // 재촬영 중인 사진 인덱스 (-1 = 일반 촬영)
+  photoFilter: 'none', // 사진 필터
 };
 
 // ========== FRAME THEMES ==========
@@ -135,7 +137,12 @@ function goToFrameSelect() {
 function goBackFromCamera() {
   stopCamera();
   resetCameraUI();
-  showScreen('screen-frame');
+  if (state.retakingIdx >= 0) {
+    state.retakingIdx = -1;
+    showCustomizeScreen();
+  } else {
+    showScreen('screen-frame');
+  }
 }
 
 function selectFrame(type) {
@@ -277,6 +284,20 @@ async function onShutter() {
 
   hideGuide();
 
+  // 재촬영 모드 — 1장만 찍고 복귀
+  if (state.retakingIdx >= 0) {
+    await doCountdown(3);
+    await doFlash();
+    const captured = captureFrameRaw();
+    if (captured) state.photos[state.retakingIdx] = captured;
+    state.retakingIdx = -1;
+    state.isCapturing = false;
+    stopCamera();
+    customBaseCanvas = null;
+    showCustomizeScreen();
+    return;
+  }
+
   // Auto-shoot all 4 photos in sequence
   for (let i = 0; i < 4; i++) {
     // Update counter to show which shot is about to be taken
@@ -343,21 +364,33 @@ async function doFlash() {
   flash.style.transition = '';
 }
 
-function captureFrame() {
+function captureFrameRaw() {
   const video = document.getElementById('camera-video');
-  if (!video || !video.videoWidth) return;
-
+  if (!video || !video.videoWidth) return null;
   const canvas = document.createElement('canvas');
   canvas.width = video.videoWidth || 1280;
   canvas.height = video.videoHeight || 720;
-
   const ctx = canvas.getContext('2d');
-  // Mirror the capture (selfie style)
   ctx.translate(canvas.width, 0);
   ctx.scale(-1, 1);
   ctx.drawImage(video, 0, 0);
+  return canvas;
+}
 
-  state.photos.push(canvas);
+function captureFrame() {
+  const canvas = captureFrameRaw();
+  if (canvas) state.photos.push(canvas);
+}
+
+function retakeSinglePhoto(idx) {
+  state.retakingIdx = idx;
+  resetCameraUI();
+  const nameEl = document.getElementById('counter-name');
+  const numEl = document.getElementById('counter-num');
+  if (nameEl) nameEl.textContent = `${idx + 1}번 사진 재촬영`;
+  if (numEl) numEl.textContent = '1 / 1';
+  showScreen('screen-camera');
+  initCamera();
 }
 
 function updateCounter() {
@@ -469,6 +502,7 @@ function renderFrameA(photos, theme = FRAME_THEMES.yellow) {
       ctx.save();
       roundedRect(ctx, x, y, PHOTO_W, PHOTO_H, 5);
       ctx.clip();
+      ctx.filter = getPhotoFilter();
 
       // 4:3으로 센터 크롭
       const srcAR = photos[i].width / photos[i].height;
@@ -576,6 +610,7 @@ function renderFrameB(photos, theme = FRAME_THEMES.yellow) {
       ctx.save();
       roundedRect(ctx, x, y, PHOTO_W, PHOTO_H, 4);
       ctx.clip();
+      ctx.filter = getPhotoFilter();
 
       // 3:4 비율로 센터 크롭
       const srcW = photos[i].width;
@@ -771,11 +806,12 @@ function showCustomizeScreen() {
   viewTransY = 0;
   pointerCache = [];
   prevPinchDist = -1;
-  // 스티커 로드 완료 후 팔레트 생성 (새 파일 추가 시에도 반영)
   preloadStickers().then(() => {
     initCustomCanvas();
     populateCharPalette();
     syncColorDots();
+    syncFilterBtns();
+    renderPhotoStrip();
   });
 }
 
@@ -801,8 +837,10 @@ async function uploadAndShowQR() {
   const status = document.getElementById('qr-modal-status');
   const qrWrap = document.getElementById('qr-modal-code');
 
+  const retryBtn = document.getElementById('qr-retry-btn');
   qrWrap.innerHTML = '';
   status.textContent = 'QR 생성 중...';
+  if (retryBtn) retryBtn.classList.add('hidden');
   modal.classList.remove('hidden');
 
   try {
@@ -819,7 +857,8 @@ async function uploadAndShowQR() {
     status.textContent = 'QR 생성 완료!';
     new QRCode(qrWrap, { text: url, width: 180, height: 180 });
   } catch (err) {
-    status.textContent = '업로드 실패 — 저장하기 버튼으로 저장해주세요';
+    status.textContent = '업로드 실패';
+    if (retryBtn) retryBtn.classList.remove('hidden');
     console.error(err);
   }
 }
@@ -1242,6 +1281,65 @@ function applyViewTransform() {
 function syncColorDots() {
   document.querySelectorAll('.color-dot').forEach((el) => {
     el.classList.toggle('active', el.dataset.color === state.frameColor);
+  });
+}
+
+// ── 사진 필터 ──
+const PHOTO_FILTERS = {
+  none:    'none',
+  bw:      'grayscale(100%)',
+  vintage: 'sepia(70%) contrast(1.1)',
+  vivid:   'contrast(1.15) saturate(1.4)',
+  bright:  'brightness(1.2) contrast(1.05)',
+};
+
+function getPhotoFilter() {
+  return PHOTO_FILTERS[state.photoFilter] || 'none';
+}
+
+function changePhotoFilter(filter) {
+  state.photoFilter = filter;
+  syncFilterBtns();
+  customBaseCanvas = null;
+  redrawCustomCanvas();
+}
+
+function syncFilterBtns() {
+  document.querySelectorAll('.filter-btn').forEach((el) => {
+    el.classList.toggle('active', el.dataset.filter === state.photoFilter);
+  });
+}
+
+// ── 재촬영 썸네일 스트립 ──
+function renderPhotoStrip() {
+  const strip = document.getElementById('photo-strip');
+  if (!strip) return;
+  strip.innerHTML = '';
+  const isA = state.frameType === 'A';
+  const TW = 56, TH = isA ? 42 : 75; // 4:3 or 3:4 thumbnail
+
+  state.photos.forEach((photo, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'photo-thumb-wrap';
+
+    const tc = document.createElement('canvas');
+    tc.width = TW; tc.height = TH;
+    const ctx = tc.getContext('2d');
+    const srcAR = photo.width / photo.height;
+    const dstAR = TW / TH;
+    let sx = 0, sy = 0, sw = photo.width, sh = photo.height;
+    if (srcAR > dstAR) { sw = sh * dstAR; sx = (photo.width - sw) / 2; }
+    else                { sh = sw / dstAR; sy = (photo.height - sh) / 2; }
+    ctx.drawImage(photo, sx, sy, sw, sh, 0, 0, TW, TH);
+
+    const btn = document.createElement('button');
+    btn.className = 'photo-retake-btn';
+    btn.textContent = '↺';
+    btn.onclick = () => retakeSinglePhoto(i);
+
+    wrap.appendChild(tc);
+    wrap.appendChild(btn);
+    strip.appendChild(wrap);
   });
 }
 
