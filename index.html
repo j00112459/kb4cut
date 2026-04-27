@@ -433,6 +433,13 @@
           </button>
         </div>
 
+        <!-- QR 코드 영역 -->
+        <div id="qr-section" class="qr-section hidden">
+          <p id="qr-status" class="qr-status">업로드 중...</p>
+          <div id="qr-code" class="qr-code"></div>
+          <p class="qr-hint">QR 스캔하면 폰에서 바로 저장 가능</p>
+        </div>
+
         <!-- KB character celebrating -->
         <div class="result-char-wrap">
           <svg
@@ -572,6 +579,7 @@
       </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

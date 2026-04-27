@@ -786,8 +786,36 @@ function backFromCustom() {
 function finalizeCustomization() {
   buildResultCanvas();
   showScreen('screen-result');
-  // 결과 화면 색상 버튼도 동기화
   syncColorDots();
+  uploadAndShowQR();
+}
+
+async function uploadAndShowQR() {
+  const section = document.getElementById('qr-section');
+  const status = document.getElementById('qr-status');
+  const qrWrap = document.getElementById('qr-code');
+  if (!section || !state.resultCanvas) return;
+
+  section.classList.remove('hidden');
+  status.textContent = '업로드 중...';
+  qrWrap.innerHTML = '';
+
+  try {
+    const dataUrl = state.resultCanvas.toDataURL('image/png');
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: dataUrl }),
+    });
+    if (!res.ok) throw new Error('upload failed');
+
+    const { url } = await res.json();
+    status.textContent = 'QR로 저장하세요';
+    new QRCode(qrWrap, { text: url, width: 160, height: 160 });
+  } catch (err) {
+    status.textContent = '업로드 실패 — 저장하기 버튼으로 저장해주세요';
+    console.error(err);
+  }
 }
 
 // ── 커스텀 캔버스 초기화 ──
