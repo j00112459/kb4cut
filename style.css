@@ -206,7 +206,7 @@ body {
 .main-title {
   font-size: 46px;
 
-  font-weight: 900;
+  btn btn-primaryfont-weight: 850;
   color: var(--dark);
   letter-spacing: -1px;
   line-height: 1;

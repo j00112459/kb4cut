@@ -141,7 +141,6 @@
 
     <!-- ===== SCREEN 2: FRAME SELECT ===== -->
     <section id="screen-frame" class="screen">
-      
       <div class="frame-select-inner">
         <button class="btn-back" onclick="goToMain()">← 뒤로가기</button>
 
@@ -425,14 +424,14 @@
         <div id="result-preview" class="result-preview"></div>
 
         <div class="result-actions">
-          <button class="btn btn-secondary" onclick="goToMain()">
-            ← 홈으로
+          <button class="btn btn-secondary" onclick="goToMain()">홈으로</button>
+          <button class="btn btn-secondary" onclick="showQRModal()">
+            QR 보기
           </button>
           <button class="btn btn-primary" onclick="downloadResult()">
-            ↓ 저장하기
+            저장하기
           </button>
         </div>
-
 
         <!-- KB character celebrating -->
         <div class="result-char-wrap">
@@ -558,7 +557,7 @@
             <li>카메라 권한을 미리 허용해주세요</li>
             <li>다양한 포즈와 표정으로 4컷을 채워보세요</li>
             <li>
-              촬영된 사진은 서버에 저장되지 않아요. 내 기기에만 저장됩니다.
+              촬영된 사진은 QR 공유를 위해 서버에 임시 저장됩니다. 개인 식별 정보는 수집하지 않습니다.
             </li>
           </ul>
         </div>

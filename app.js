@@ -16,6 +16,7 @@ const state = {
   frameColor: 'yellow', // 'yellow' | 'blue' | 'black' | 'white'
   characterPlacements: [], // [{key, x, y, w, h}] — 커스텀 캐릭터 배치
   selectedCharIdx: -1, // 현재 선택된 캐릭터 인덱스
+  qrUrl: null, // 업로드된 S3 URL
 };
 
 // ========== FRAME THEMES ==========
@@ -86,6 +87,7 @@ const STICKER_FILES = {
   정면주댕치: '정면주댕치.png',
   부트캠프픽셀로고누끼: '부트캠프픽셀로고누끼.png',
   KB픽셀풍선모양누끼: 'KB픽셀풍선모양누끼.png',
+  물고있는커비: '물고있는커비.png',
 };
 function preloadStickers() {
   const promises = Object.entries(STICKER_FILES).map(
@@ -793,6 +795,7 @@ function finalizeCustomization() {
 async function uploadAndShowQR() {
   if (!state.resultCanvas) return;
 
+  state.qrUrl = null;
   const modal = document.getElementById('qr-modal');
   const status = document.getElementById('qr-modal-status');
   const qrWrap = document.getElementById('qr-modal-code');
@@ -811,11 +814,30 @@ async function uploadAndShowQR() {
     if (!res.ok) throw new Error('upload failed');
 
     const { url } = await res.json();
+    state.qrUrl = url;
     status.textContent = 'QR 생성 완료!';
     new QRCode(qrWrap, { text: url, width: 180, height: 180 });
   } catch (err) {
     status.textContent = '업로드 실패 — 저장하기 버튼으로 저장해주세요';
     console.error(err);
+  }
+}
+
+function showQRModal() {
+  const modal = document.getElementById('qr-modal');
+  const status = document.getElementById('qr-modal-status');
+  const qrWrap = document.getElementById('qr-modal-code');
+
+  modal.classList.remove('hidden');
+
+  if (state.qrUrl) {
+    // 이미 완료된 경우 QR 다시 그리기
+    status.textContent = 'QR 생성 완료!';
+    if (!qrWrap.hasChildNodes()) {
+      new QRCode(qrWrap, { text: state.qrUrl, width: 180, height: 180 });
+    }
+  } else {
+    status.textContent = 'QR 생성 중...';
   }
 }
 
