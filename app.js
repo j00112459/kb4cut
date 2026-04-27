@@ -88,6 +88,7 @@ const STICKER_FILES = {
   부트캠프픽셀로고누끼: '부트캠프픽셀로고누끼.png',
   KB픽셀풍선모양누끼: 'KB픽셀풍선모양누끼.png',
   물고있는커비: '물고있는커비.png',
+  코딩커비: '코딩커비.png',
 };
 function preloadStickers() {
   const promises = Object.entries(STICKER_FILES).map(
