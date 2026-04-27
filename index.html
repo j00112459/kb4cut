@@ -433,12 +433,6 @@
           </button>
         </div>
 
-        <!-- QR 코드 영역 -->
-        <div id="qr-section" class="qr-section hidden">
-          <p id="qr-status" class="qr-status">업로드 중...</p>
-          <div id="qr-code" class="qr-code"></div>
-          <p class="qr-hint">QR 스캔하면 폰에서 바로 저장 가능</p>
-        </div>
 
         <!-- KB character celebrating -->
         <div class="result-char-wrap">
@@ -576,6 +570,16 @@
         >
           확인!
         </button>
+      </div>
+    </div>
+
+    <!-- ===== QR 모달 ===== -->
+    <div id="qr-modal" class="qr-modal hidden" onclick="closeQRModal(event)">
+      <div class="qr-modal-card">
+        <button class="qr-modal-close" onclick="closeQRModal()">✕</button>
+        <p id="qr-modal-status" class="qr-modal-status">QR 생성 중...</p>
+        <div id="qr-modal-code" class="qr-modal-code"></div>
+        <p class="qr-modal-hint">QR 스캔하면 폰에서 바로 저장 가능</p>
       </div>
     </div>
 

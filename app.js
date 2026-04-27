@@ -791,14 +791,15 @@ function finalizeCustomization() {
 }
 
 async function uploadAndShowQR() {
-  const section = document.getElementById('qr-section');
-  const status = document.getElementById('qr-status');
-  const qrWrap = document.getElementById('qr-code');
-  if (!section || !state.resultCanvas) return;
+  if (!state.resultCanvas) return;
 
-  section.classList.remove('hidden');
-  status.textContent = '업로드 중...';
+  const modal = document.getElementById('qr-modal');
+  const status = document.getElementById('qr-modal-status');
+  const qrWrap = document.getElementById('qr-modal-code');
+
   qrWrap.innerHTML = '';
+  status.textContent = 'QR 생성 중...';
+  modal.classList.remove('hidden');
 
   try {
     const dataUrl = state.resultCanvas.toDataURL('image/png');
@@ -810,12 +811,17 @@ async function uploadAndShowQR() {
     if (!res.ok) throw new Error('upload failed');
 
     const { url } = await res.json();
-    status.textContent = 'QR로 저장하세요';
-    new QRCode(qrWrap, { text: url, width: 160, height: 160 });
+    status.textContent = 'QR 생성 완료!';
+    new QRCode(qrWrap, { text: url, width: 180, height: 180 });
   } catch (err) {
     status.textContent = '업로드 실패 — 저장하기 버튼으로 저장해주세요';
     console.error(err);
   }
+}
+
+function closeQRModal(e) {
+  if (e && e.target !== document.getElementById('qr-modal')) return;
+  document.getElementById('qr-modal').classList.add('hidden');
 }
 
 // ── 커스텀 캔버스 초기화 ──
